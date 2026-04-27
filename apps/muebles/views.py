@@ -1,17 +1,23 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from .service import MueblesService
-class SimulationView(ViewSet):
 
+
+def simulation_page(request):
+    """Sirve el HTML que va a hacer fetch contra la API."""
+    return render(request, 'muebles/simulation.html')
+
+
+class SimulationViewSet(ViewSet):
     service = MueblesService()
 
-    # /api/simulation/default
-    @action(methods=['get'], detail=False, url_path="defaults")
-    def default(self, request):
-        pass
+    # GET /api/simulation/defaults/
+    @action(methods=['get'], detail=False, url_path='defaults')
+    def defaults(self, request):
+        return Response({'ok': True, 'message': 'defaults pendiente'})
 
-    # /api/simulation
+    # POST /api/simulation/
     def create(self, request):
-        pass
-
+        return Response({'ok': True, 'message': 'simulación pendiente'})

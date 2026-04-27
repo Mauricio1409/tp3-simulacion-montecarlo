@@ -1,0 +1,14 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}TP3 - Muebles{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'muebles/css/simulation.css' %}">
+</head>
+<body>
+    {% block content %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

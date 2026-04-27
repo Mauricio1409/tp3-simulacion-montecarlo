@@ -1,0 +1,11 @@
+{% extends 'muebles/base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1>Simulación de Muebles</h1>
+    <div id="status">Conectando con la API...</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'muebles/js/simulation.js' %}"></script>
+{% endblock %}

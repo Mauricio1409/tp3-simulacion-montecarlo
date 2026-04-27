@@ -1,3 +1,5 @@
 class MueblesService:
-    def simulation(self, data):
+    """Servicio de simulación de Montecarlo. Pendiente: implementar."""
+
+    def run(self, params):
         pass
