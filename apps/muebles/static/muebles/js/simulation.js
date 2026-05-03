@@ -193,6 +193,16 @@ function buildRow(row, isLast = false) {
 
     addNum(tr, row.tiempo_total);
 
+    // Acumuladores hasta esta corrida
+    addNum(tr, row.acc_tiempo_total);
+    addNum(tr, row.acc_demoras_calibracion);
+    addNum(tr, row.acc_demoras_extras);
+    addCell(tr, row.acc_count_ctrl_interv);
+    addCell(tr, row.acc_count_sin_demoras);
+    addCell(tr, row.acc_count_jornadas_calibracion);
+    addCell(tr, row.acc_count_demoras_calibracion);
+    addCell(tr, row.acc_count_demoras_extras);
+
     return tr;
 }
 
@@ -208,7 +218,7 @@ function renderTable(data) {
     if (data.last_row) {
         const sep = document.createElement('tr');
         sep.classList.add('row-separator');
-        sep.innerHTML = `<td colspan="24">··· FILA N — CORRIDA ${data.total_corridas?.toLocaleString()} ···</td>`;
+        sep.innerHTML = `<td colspan="32">··· FILA N — CORRIDA ${data.total_corridas?.toLocaleString()} ···</td>`;
         tbody.appendChild(sep);
         tbody.appendChild(buildRow(data.last_row, true));
     }

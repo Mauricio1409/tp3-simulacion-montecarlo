@@ -30,22 +30,25 @@ class MueblesService:
         media_tiempo_etapa = params['media_tiempo_etapa']
         desvio_tiempo_etapa = params['desvio_tiempo_etapa']
 
-        page_start = (page - 1) * page_size
-        page_end = min(page * page_size, n - 1)
+        # rango de corridas que vamos a guardar en memoria
+        # excluimos la última corrida porque siempre va aparte en last_row
+        primera_fila_pagina = (page - 1) * page_size + 1
+        ultima_fila_pagina = min(page * page_size, n - 1)
         total_pages = math.ceil(n / page_size)
 
-        # variables adicionales
+        # acumuladores escalares (no guardamos N filas en memoria)
         tiempo_total_acumulado = 0.0
         cantidad_paso_control_intervencion = 0
         cantidad_sin_demoras = 0
-        tiempos_totales = []
+        tiempo_total_minimo = float('inf')
+        tiempo_total_maximo = float('-inf')
         cantidad_jornadas_con_al_menos_una_calibracion = 0
         demoras_calibracion_acumuladas = 0.0
         cantidad_demoras_calibracion = 0
         demoras_extras_acumuladas = 0.0
         cantidad_demoras_extras = 0
 
-        rows     = []
+        rows     = []   # solo va a contener las filas de la página solicitada
         last_row = None
 
         prev_rnd_e1 = None
@@ -89,8 +92,11 @@ class MueblesService:
             ):
                 cantidad_sin_demoras +=1
 
-            # guardamos los tiempos totales para obtener el maximo y el minimo
-            tiempos_totales.append(row['tiempo_total'])
+            # actualizamos min y max sin necesidad de guardar todos los tiempos
+            if row['tiempo_total'] < tiempo_total_minimo:
+                tiempo_total_minimo = row['tiempo_total']
+            if row['tiempo_total'] > tiempo_total_maximo:
+                tiempo_total_maximo = row['tiempo_total']
 
             # cantidad de veces que hubo demoras de calibracion
             if row.get("tiene_demora_etapa_3", False) or row["tiene_demora_etapa_1"]:
@@ -110,32 +116,37 @@ class MueblesService:
                 demoras_extras_acumuladas += demora_control + demora_intervencion
                 cantidad_demoras_extras += 1
 
-            # guardar datos de la ultima iteracion
+            # volcamos al row el valor de los acumuladores hasta esta corrida
+            row["acc_tiempo_total"] = tiempo_total_acumulado
+            row["acc_demoras_calibracion"] = demoras_calibracion_acumuladas
+            row["acc_demoras_extras"] = demoras_extras_acumuladas
+            row["acc_count_ctrl_interv"] = cantidad_paso_control_intervencion
+            row["acc_count_sin_demoras"] = cantidad_sin_demoras
+            row["acc_count_jornadas_calibracion"] = cantidad_jornadas_con_al_menos_una_calibracion
+            row["acc_count_demoras_calibracion"] = cantidad_demoras_calibracion
+            row["acc_count_demoras_extras"] = cantidad_demoras_extras
+
+            # guardamos solo si la corrida cae dentro de la página solicitada
+            if primera_fila_pagina <= i <= ultima_fila_pagina:
+                rows.append(row)
+
+            # la última corrida siempre se guarda aparte
             if i == n:
                 last_row = row
-
-
-            rows.append(row)
 
         # calcular variables adicionales
         tiempo_promedio = tiempo_total_acumulado/n
         porcentaje_pasa_control_intervencion = (cantidad_paso_control_intervencion*100)/n
-        tiempo_total_minimo = min(tiempos_totales)
-        tiempo_total_maximo = max(tiempos_totales)
         porcentaje_jornadas_con_al_menos_una_calibracion = (cantidad_jornadas_con_al_menos_una_calibracion*100)/n
         tiempo_promedio_demora_adicional = demoras_extras_acumuladas/cantidad_demoras_extras if cantidad_demoras_extras else 0.0
         tiempo_promedio_demora_calibracion = demoras_calibracion_acumuladas/cantidad_demoras_calibracion if cantidad_demoras_calibracion else 0.0
-
-
-        # paginar filas
-        paginated_rows = rows[page_start:page_end]
 
         response = {
             "total_corridas": n,
             "page" : page,
             "page_size" : page_size,
             "total_pages": total_pages,
-            "rows" : paginated_rows,
+            "rows" : rows,
             "last_row" : last_row,
             "tiempo_promedio": tiempo_promedio,
             "porcentaje_pasa_control_intervencion": porcentaje_pasa_control_intervencion,
