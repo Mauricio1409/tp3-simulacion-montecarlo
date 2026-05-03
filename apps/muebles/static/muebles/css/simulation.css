@@ -162,6 +162,23 @@ input[type="number"]:focus {
     font-weight: 400;
 }
 
+.field-error {
+    font-size: .72rem;
+    color: #dc2626;
+    font-weight: 300;
+    margin-top: 2px;
+}
+.field-error:empty {
+    display: none;
+}
+input.invalid {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+input.invalid:focus {
+    box-shadow: 0 0 0 3px rgba(220,38,38,.15);
+}
+
 /* ─── Actions ─────────────────────────────────────────────────────────────── */
 .form-actions {
     display: flex;

@@ -23,7 +23,7 @@
             <button type="button" class="btn-secondary" id="btn-defaults">Cargar defaults</button>
         </div>
 
-        <form id="sim-form">
+        <form id="sim-form" novalidate>
 
             <div class="fieldset-grid">
 
@@ -33,15 +33,18 @@
                         <label>
                             N° de corridas
                             <input type="number" name="n_corridas" value="1000" min="1" max="1000000">
+                            <span class="field-error" data-for="n_corridas"></span>
                         </label>
                         <label>
                             Página
                             <input type="number" name="page" value="1" min="1">
+                            <span class="field-error" data-for="page"></span>
                         </label>
                         <label>
                             Filas por página
                             <input type="number" name="page_size" value="200" min="1" max="500">
                             <span class="hint">Máx. 500</span>
+                            <span class="field-error" data-for="page_size"></span>
                         </label>
                     </div>
                 </fieldset>
@@ -49,18 +52,42 @@
                 <fieldset>
                     <legend>Probabilidad de línea <span class="hint-inline">(deben sumar 1)</span></legend>
                     <div class="form-grid">
-                        <label>P(1 etapa)<input type="number" name="prob_etapa_1" value="0.20" step="0.01" min="0" max="1"></label>
-                        <label>P(2 etapas)<input type="number" name="prob_etapa_2" value="0.50" step="0.01" min="0" max="1"></label>
-                        <label>P(3 etapas)<input type="number" name="prob_etapa_3" value="0.30" step="0.01" min="0" max="1"></label>
+                        <label>
+                            P(1 etapa)
+                            <input type="number" name="prob_etapa_1" value="0.20" step="0.01" min="0" max="1">
+                            <span class="field-error" data-for="prob_etapa_1"></span>
+                        </label>
+                        <label>
+                            P(2 etapas)
+                            <input type="number" name="prob_etapa_2" value="0.50" step="0.01" min="0" max="1">
+                            <span class="field-error" data-for="prob_etapa_2"></span>
+                        </label>
+                        <label>
+                            P(3 etapas)
+                            <input type="number" name="prob_etapa_3" value="0.30" step="0.01" min="0" max="1">
+                            <span class="field-error" data-for="prob_etapa_3"></span>
+                        </label>
                     </div>
                 </fieldset>
 
                 <fieldset>
                     <legend>Probabilidades de eventos</legend>
                     <div class="form-grid">
-                        <label>P(pasa por control)<input type="number" name="prob_control" value="0.60" step="0.01" min="0" max="1"></label>
-                        <label>P(demora, líneas 1 y 3)<input type="number" name="prob_demora" value="0.40" step="0.01" min="0" max="1"></label>
-                        <label>P(intervención extra)<input type="number" name="prob_intervencion" value="0.25" step="0.01" min="0" max="1"></label>
+                        <label>
+                            P(pasa por control)
+                            <input type="number" name="prob_control" value="0.60" step="0.01" min="0" max="1">
+                            <span class="field-error" data-for="prob_control"></span>
+                        </label>
+                        <label>
+                            P(demora, líneas 1 y 3)
+                            <input type="number" name="prob_demora" value="0.40" step="0.01" min="0" max="1">
+                            <span class="field-error" data-for="prob_demora"></span>
+                        </label>
+                        <label>
+                            P(intervención extra)
+                            <input type="number" name="prob_intervencion" value="0.25" step="0.01" min="0" max="1">
+                            <span class="field-error" data-for="prob_intervencion"></span>
+                        </label>
                     </div>
                 </fieldset>
 
@@ -71,26 +98,31 @@
                             Media tiempo etapa (min)
                             <input type="number" name="media_tiempo_etapa" value="5" min="0.01" step="0.1">
                             <span class="hint">Normal</span>
+                            <span class="field-error" data-for="media_tiempo_etapa"></span>
                         </label>
                         <label>
                             Desvío estándar (min)
                             <input type="number" name="desvio_tiempo_etapa" value="2.83" min="0.01" step="0.01">
                             <span class="hint">≈ 170 seg</span>
+                            <span class="field-error" data-for="desvio_tiempo_etapa"></span>
                         </label>
                         <label>
                             Media demora control (min)
                             <input type="number" name="media_tiempo_control" value="8" min="0.01" step="0.1">
                             <span class="hint">Exponencial</span>
+                            <span class="field-error" data-for="media_tiempo_control"></span>
                         </label>
                         <label>
                             Media intervención extra (min)
                             <input type="number" name="media_intervencion" value="12" min="0.01" step="0.1">
                             <span class="hint">Exponencial</span>
+                            <span class="field-error" data-for="media_intervencion"></span>
                         </label>
                         <label>
                             Factor demora (×)
                             <input type="number" name="factor_demora" value="1.8" min="1" step="0.01">
                             <span class="hint">1.8 = +80%</span>
+                            <span class="field-error" data-for="factor_demora"></span>
                         </label>
                     </div>
                 </fieldset>

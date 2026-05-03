@@ -34,6 +34,85 @@ function collectParams() {
     return p;
 }
 
+// Validacion de campos
+
+function setFieldError(name, msg) {
+    const errEl = document.querySelector(`.field-error[data-for="${name}"]`);
+    const input = form.elements[name];
+    if (errEl) errEl.textContent = msg || '';
+    if (input) input.classList.toggle('invalid', !!msg);
+}
+
+function clearAllErrors() {
+    document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+    form.querySelectorAll('input.invalid').forEach(el => el.classList.remove('invalid'));
+}
+
+function validateParams(p) {
+    const errors = {};
+
+    // Enteros con rango
+    if (!Number.isInteger(p.n_corridas) || p.n_corridas < 1 || p.n_corridas > 1_000_000) {
+        errors.n_corridas = 'Debe ser un entero entre 1 y 1.000.000';
+    }
+    if (!Number.isInteger(p.page) || p.page < 1) {
+        errors.page = 'Debe ser un entero ≥ 1';
+    }
+    if (!Number.isInteger(p.page_size) || p.page_size < 1 || p.page_size > 500) {
+        errors.page_size = 'Debe ser un entero entre 1 y 500';
+    }
+
+    // Probabilidades de etapa: cada una en [0, 1]
+    for (const k of ['prob_etapa_1', 'prob_etapa_2', 'prob_etapa_3']) {
+        if (Number.isNaN(p[k]) || p[k] < 0 || p[k] > 1) {
+            errors[k] = 'Debe estar entre 0 y 1';
+        }
+    }
+    // Suma de probabilidades de etapa = 1
+    const suma = p.prob_etapa_1 + p.prob_etapa_2 + p.prob_etapa_3;
+    if (!Number.isNaN(suma) && Math.abs(suma - 1) > 1e-6) {
+        const msg = `Las 3 probabilidades deben sumar 1 (suman ${suma.toFixed(2)})`;
+        for (const k of ['prob_etapa_1', 'prob_etapa_2', 'prob_etapa_3']) {
+            if (!errors[k]) errors[k] = msg;
+        }
+    }
+
+    // Probabilidades de eventos: en [0, 1]
+    for (const k of ['prob_control', 'prob_demora', 'prob_intervencion']) {
+        if (Number.isNaN(p[k]) || p[k] < 0 || p[k] > 1) {
+            errors[k] = 'Debe estar entre 0 y 1';
+        }
+    }
+
+    // Medias y desvio: > 0
+    for (const k of ['media_tiempo_etapa', 'desvio_tiempo_etapa', 'media_tiempo_control', 'media_intervencion']) {
+        if (Number.isNaN(p[k]) || p[k] <= 0) {
+            errors[k] = 'Debe ser mayor a 0';
+        }
+    }
+
+    // Factor demora: ≥ 1
+    if (Number.isNaN(p.factor_demora) || p.factor_demora < 1) {
+        errors.factor_demora = 'Debe ser ≥ 1';
+    }
+
+    // Cross-field: la página no puede exceder el total de corridas
+    if (Number.isInteger(p.n_corridas) && Number.isInteger(p.page) && Number.isInteger(p.page_size)) {
+        const offset = (p.page - 1) * p.page_size;
+        if (offset >= p.n_corridas) {
+            errors.page = `La página ${p.page} excede el total de ${p.n_corridas} corridas`;
+        }
+    }
+
+    return errors;
+}
+
+function showErrors(errors) {
+    for (const [name, msg] of Object.entries(errors)) {
+        setFieldError(name, msg);
+    }
+}
+
 // Stats
 
 function renderStats(data) {
@@ -178,13 +257,32 @@ async function runSimulation(params) {
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    lastParams = collectParams();
-    lastParams.page = 1;
+    clearAllErrors();
+
+    const params = collectParams();
+    params.page = 1;
     inputPage.value = 1;
+
+    const errors = validateParams(params);
+    if (Object.keys(errors).length > 0) {
+        showErrors(errors);
+        setStatus('Hay errores en el formulario.', true);
+        return;
+    }
+
+    lastParams = params;
     await runSimulation(lastParams);
 });
 
-btnDefaults.addEventListener('click', () => form.reset());
+// Limpiar el error de un campo cuando el usuario lo modifica
+form.addEventListener('input', (e) => {
+    if (e.target.name) setFieldError(e.target.name, '');
+});
+
+btnDefaults.addEventListener('click', () => {
+    form.reset();
+    clearAllErrors();
+});
 
 btnPrev.addEventListener('click', async () => {
     if (!lastParams || currentPage <= 1) return;
