@@ -1,1 +1,322 @@
-/* Estilos de la simulación. Pendiente. */
+/* ─── Variables ───────────────────────────────────────────────────────────── */
+:root {
+    --blue-900: #0f172a;
+    --blue-800: #1e293b;
+    --blue-700: #1d4ed8;
+    --blue-600: #2563eb;
+    --blue-100: #dbeafe;
+    --blue-50:  #eff6ff;
+    --gray-50:  #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-400: #94a3b8;
+    --gray-600: #475569;
+    --gray-900: #0f172a;
+    --green-100:#dcfce7;
+    --green-700:#15803d;
+    --red-100:  #fee2e2;
+    --red-700:  #b91c1c;
+    --radius:   10px;
+    --shadow:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md:0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.04);
+}
+
+/* ─── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    background: var(--gray-100);
+    color: var(--gray-900);
+    line-height: 1.5;
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────────── */
+.app-header {
+    background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-800) 100%);
+    color: #fff;
+    padding: 0 32px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.header-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 22px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.app-header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; }
+.app-header p  { font-size: .8rem; color: rgba(255,255,255,.55); margin-top: 3px; }
+.header-badge {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    color: rgba(255,255,255,.7);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+/* ─── Main ────────────────────────────────────────────────────────────────── */
+.app-main {
+    max-width: 1440px;
+    margin: 28px auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ─── Card ────────────────────────────────────────────────────────────────── */
+.card {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 24px;
+}
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--gray-200);
+}
+.card-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    letter-spacing: -.01em;
+}
+
+.hidden { display: none !important; }
+
+/* ─── Fieldsets ───────────────────────────────────────────────────────────── */
+.fieldset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+fieldset {
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 16px 16px;
+    background: var(--gray-50);
+}
+legend {
+    font-weight: 700;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--gray-600);
+    padding: 0 6px;
+    background: var(--gray-50);
+}
+.hint-inline {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: .7rem;
+    color: var(--gray-400);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-weight: 500;
+    font-size: .82rem;
+    color: var(--gray-600);
+}
+
+input[type="number"] {
+    padding: 7px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: .9rem;
+    width: 100%;
+    background: #fff;
+    color: var(--gray-900);
+    transition: border-color .15s, box-shadow .15s;
+}
+input[type="number"]:focus {
+    outline: none;
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.hint {
+    font-size: .72rem;
+    color: var(--gray-400);
+    font-weight: 400;
+}
+
+/* ─── Actions ─────────────────────────────────────────────────────────────── */
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+button[type="submit"], .btn-secondary, .btn-page {
+    border: none;
+    border-radius: 7px;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+}
+button[type="submit"] {
+    background: var(--blue-600);
+    color: #fff;
+    padding: 10px 30px;
+}
+button[type="submit"]:hover    { background: var(--blue-700); }
+button[type="submit"]:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: 1px solid var(--gray-200);
+    padding: 7px 16px;
+}
+.btn-secondary:hover { background: var(--gray-200); }
+
+.sim-status { font-size: .82rem; color: var(--gray-400); }
+.sim-status.error { color: #dc2626; }
+
+/* ─── Stats ───────────────────────────────────────────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.stat-box {
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: var(--gray-50);
+}
+.stat-box.stat-accent {
+    background: var(--blue-50);
+    border-color: var(--blue-100);
+}
+.stat-box.stat-extra {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+/* ─── Variables propias ───────────────────────────────────────────────────── */
+.vars-propias {
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+    padding: 16px;
+    margin-bottom: 22px;
+}
+.vars-propias-title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--green-700);
+    margin-bottom: 12px;
+}
+
+.stat-label { font-size: .72rem; color: var(--gray-400); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.stat-value { font-size: 1.6rem; font-weight: 800; color: var(--blue-700); line-height: 1.1; margin-top: 4px; }
+.stat-unit  { font-size: .72rem; color: var(--gray-400); font-weight: 500; }
+
+.result-meta { font-size: .78rem; color: var(--gray-400); }
+
+/* ─── Table ───────────────────────────────────────────────────────────────── */
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .73rem;
+    white-space: nowrap;
+}
+
+thead th {
+    background: var(--blue-900);
+    color: rgba(255,255,255,.9);
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,.07);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+thead tr:nth-child(2) th {
+    background: var(--blue-800);
+    font-weight: 500;
+    font-size: .68rem;
+    color: rgba(255,255,255,.7);
+}
+
+tbody tr:nth-child(even) td { background: var(--gray-50); }
+tbody tr:hover td { background: var(--blue-50); }
+
+tbody td {
+    padding: 5px 10px;
+    text-align: center;
+    border: 1px solid var(--gray-200);
+    color: var(--gray-900);
+}
+
+tbody tr.last-row td {
+    background: #fef9c3 !important;
+    font-weight: 700;
+    color: #92400e;
+}
+
+td.na { color: var(--gray-200); font-size: .7rem; }
+
+td.si { color: var(--green-700); font-weight: 600; }
+td.no { color: var(--red-700);   font-weight: 600; }
+
+/* ─── Pagination ──────────────────────────────────────────────────────────── */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-200);
+}
+.btn-page {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: 1px solid var(--gray-200) !important;
+    padding: 7px 18px;
+}
+.btn-page:hover:not(:disabled) { background: var(--gray-200); }
+.btn-page:disabled { opacity: .4; cursor: not-allowed; }
+.page-info { font-size: .82rem; color: var(--gray-600); font-weight: 500; }

@@ -1,11 +1,203 @@
 {% extends 'muebles/base.html' %}
 {% load static %}
 
+{% block title %}TP3 — Simulación de Muebles{% endblock %}
+
 {% block content %}
-    <h1>Simulación de Muebles</h1>
-    <div id="status">Conectando con la API...</div>
+<header class="app-header">
+    <div class="header-inner">
+        <div>
+            <h1>Simulación Montecarlo — Fábrica de Muebles</h1>
+            <p>UTN · Simulación 2026 · TP #3</p>
+        </div>
+        <div class="header-badge">Monte Carlo</div>
+    </div>
+</header>
+
+<main class="app-main">
+
+    <!-- ── PARÁMETROS ── -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Parámetros de entrada</h2>
+            <button type="button" class="btn-secondary" id="btn-defaults">Cargar defaults</button>
+        </div>
+
+        <form id="sim-form" novalidate>
+
+            <div class="fieldset-grid">
+
+                <fieldset>
+                    <legend>Simulación</legend>
+                    <div class="form-grid">
+                        <label>
+                            N° de corridas
+                            <input type="number" name="n_corridas" value="1000" min="1">
+                        </label>
+                        <label>
+                            Página
+                            <input type="number" name="page" value="1" min="1">
+                        </label>
+                        <label>
+                            Filas por página
+                            <input type="number" name="page_size" value="200" min="1" max="500">
+                            <span class="hint">Máx. 500</span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Probabilidad de línea <span class="hint-inline">(deben sumar 1)</span></legend>
+                    <div class="form-grid">
+                        <label>P(1 etapa)<input type="number" name="prob_etapa_1" value="0.20" step="0.01" min="0" max="1"></label>
+                        <label>P(2 etapas)<input type="number" name="prob_etapa_2" value="0.50" step="0.01" min="0" max="1"></label>
+                        <label>P(3 etapas)<input type="number" name="prob_etapa_3" value="0.30" step="0.01" min="0" max="1"></label>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Probabilidades de eventos</legend>
+                    <div class="form-grid">
+                        <label>P(pasa por control)<input type="number" name="prob_control" value="0.60" step="0.01" min="0" max="1"></label>
+                        <label>P(demora, líneas 1 y 3)<input type="number" name="prob_demora" value="0.40" step="0.01" min="0" max="1"></label>
+                        <label>P(intervención extra)<input type="number" name="prob_intervencion" value="0.25" step="0.01" min="0" max="1"></label>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Distribuciones</legend>
+                    <div class="form-grid">
+                        <label>
+                            Media tiempo etapa (min)
+                            <input type="number" name="media_tiempo_etapa" value="5" min="0" step="0.1">
+                            <span class="hint">Normal</span>
+                        </label>
+                        <label>
+                            Desvío estándar (min)
+                            <input type="number" name="desvio_tiempo_etapa" value="2.83" min="0" step="0.01">
+                            <span class="hint">≈ 170 seg</span>
+                        </label>
+                        <label>
+                            Media demora control (min)
+                            <input type="number" name="media_tiempo_control" value="8" min="0" step="0.1">
+                            <span class="hint">Exponencial</span>
+                        </label>
+                        <label>
+                            Media intervención extra (min)
+                            <input type="number" name="media_intervencion" value="12" min="0" step="0.1">
+                            <span class="hint">Exponencial</span>
+                        </label>
+                        <label>
+                            Factor demora (×)
+                            <input type="number" name="factor_demora" value="1.8" min="1" step="0.01">
+                            <span class="hint">1.8 = +80%</span>
+                        </label>
+                    </div>
+                </fieldset>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" id="btn-simular">Simular</button>
+                <span id="sim-status" class="sim-status"></span>
+            </div>
+        </form>
+    </section>
+
+    <!-- ── RESULTADOS ── -->
+    <section class="card hidden" id="results">
+
+        <div class="card-header">
+            <h2>Resultados</h2>
+            <span id="result-meta" class="result-meta"></span>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-label">Tiempo promedio</span>
+                <span class="stat-value" id="stat-promedio">—</span>
+                <span class="stat-unit">min</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Tiempo máximo</span>
+                <span class="stat-value" id="stat-maximo">—</span>
+                <span class="stat-unit">min</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Tiempo mínimo</span>
+                <span class="stat-value" id="stat-minimo">—</span>
+                <span class="stat-unit">min</span>
+            </div>
+            <div class="stat-box stat-accent">
+                <span class="stat-label">Control + intervención</span>
+                <span class="stat-value" id="stat-ctrl-interv">—</span>
+                <span class="stat-unit">%</span>
+            </div>
+            <div class="stat-box stat-accent">
+                <span class="stat-label">Sin demoras</span>
+                <span class="stat-value" id="stat-sin-demoras">—</span>
+                <span class="stat-unit">jornadas</span>
+            </div>
+        </div>
+
+        <div class="vars-propias">
+            <h3 class="vars-propias-title">Variables propias del grupo</h3>
+            <div class="stats-grid">
+                <div class="stat-box stat-extra">
+                    <span class="stat-label">Jornadas con calibración</span>
+                    <span class="stat-value" id="stat-pct-calibracion">—</span>
+                    <span class="stat-unit">%</span>
+                </div>
+                <div class="stat-box stat-extra">
+                    <span class="stat-label">T. promedio demora adicional</span>
+                    <span class="stat-value" id="stat-demora-adicional">—</span>
+                    <span class="stat-unit">min</span>
+                </div>
+                <div class="stat-box stat-extra">
+                    <span class="stat-label">T. promedio demora calibración</span>
+                    <span class="stat-value" id="stat-demora-calibracion">—</span>
+                    <span class="stat-unit">min</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="sim-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Reloj</th>
+                        <th colspan="2">Línea</th>
+                        <th colspan="5">Etapa 1</th>
+                        <th colspan="2">Etapa 2</th>
+                        <th colspan="5">Etapa 3</th>
+                        <th colspan="4">Control</th>
+                        <th colspan="4">Intervención</th>
+                        <th rowspan="2">T. Total</th>
+                    </tr>
+                    <tr>
+                        <th>RND</th><th>Cant.</th>
+                        <th>RND</th><th>T. Base</th><th>RND Dem.</th><th>¿Dem?</th><th>T. Total</th>
+                        <th>RND</th><th>T.</th>
+                        <th>RND</th><th>T. Base</th><th>RND Dem.</th><th>¿Dem?</th><th>T. Total</th>
+                        <th>RND</th><th>¿Pasa?</th><th>RND</th><th>T.</th>
+                        <th>RND</th><th>¿Req?</th><th>RND</th><th>T.</th>
+                    </tr>
+                </thead>
+                <tbody id="sim-tbody"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <button class="btn-page" id="btn-prev" disabled>← Anterior</button>
+            <span id="page-info" class="page-info"></span>
+            <button class="btn-page" id="btn-next">Siguiente →</button>
+        </div>
+
+    </section>
+
+</main>
 {% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'muebles/js/simulation.js' %}"></script>
+<script src="{% static 'muebles/js/simulation.js' %}"></script>
 {% endblock %}

@@ -96,10 +96,12 @@ class MueblesService:
             if row.get("tiene_demora_etapa_3", False) or row["tiene_demora_etapa_1"]:
                 cantidad_jornadas_con_al_menos_una_calibracion += 1
 
-                demora_e1 = row["tiempo_total_etapa_1"] - row["tiempo_etapa_1"] if row["tiene_demora_etapa_1"] else 0.0
-                demora_e3 = row["tiempo_total_etapa_3"] - row["tiempo_etapa_3"] if row.get("tiene_demora_etapa_3", False) else 0.0
+            if row["tiene_demora_etapa_1"]:
+                demoras_calibracion_acumuladas += row["tiempo_total_etapa_1"] - row["tiempo_etapa_1"]
                 cantidad_demoras_calibracion += 1
-                demoras_calibracion_acumuladas += demora_e1 + demora_e3
+            if row.get("tiene_demora_etapa_3", False):
+                demoras_calibracion_acumuladas += row["tiempo_total_etapa_3"] - row["tiempo_etapa_3"]
+                cantidad_demoras_calibracion += 1
 
 
             if row["pasa_control"] or row["requiere_intervencion"]:
@@ -121,8 +123,8 @@ class MueblesService:
         tiempo_total_minimo = min(tiempos_totales)
         tiempo_total_maximo = max(tiempos_totales)
         porcentaje_jornadas_con_al_menos_una_calibracion = (cantidad_jornadas_con_al_menos_una_calibracion*100)/n
-        tiempo_promedio_demora_adicional = demoras_extras_acumuladas/cantidad_demoras_extras
-        tiempo_promedio_demora_calibracion = demoras_calibracion_acumuladas/cantidad_demoras_calibracion
+        tiempo_promedio_demora_adicional = demoras_extras_acumuladas/cantidad_demoras_extras if cantidad_demoras_extras else 0.0
+        tiempo_promedio_demora_calibracion = demoras_calibracion_acumuladas/cantidad_demoras_calibracion if cantidad_demoras_calibracion else 0.0
 
 
         # paginar filas
@@ -184,7 +186,7 @@ class MueblesService:
         # Etapa 1 (todas las líneas)
         rnd1_e1 = random.random()
         rnd2_e1 = prev_rnd_e1 if prev_rnd_e1 is not None else 0
-        t1 = self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e1, rnd2_e1)
+        t1 = max(0.0, self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e1, rnd2_e1))
         row['rnd_tiempo_etapa_1'] = rnd1_e1
         row['tiempo_etapa_1'] = t1
 
@@ -202,7 +204,7 @@ class MueblesService:
         if n_etapas >= 2:
             rnd1_e2 = random.random()
             rnd2_e2 = prev_rnd_e2 if prev_rnd_e2 is not None else 0
-            t2 = self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e2, rnd2_e2)
+            t2 = max(0.0, self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e2, rnd2_e2))
             row['rnd_tiempo_etapa_2'] = rnd1_e2
             row['tiempo_etapa_2'] = t2
             tiempo_etapas += t2
@@ -211,7 +213,7 @@ class MueblesService:
         if n_etapas == 3:
             rnd1_e3 = random.random()
             rnd2_e3 = prev_rnd_e3 if prev_rnd_e3 is not None else 0
-            t3 = self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e3, rnd2_e3)
+            t3 = max(0.0, self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e3, rnd2_e3))
             row['rnd_tiempo_etapa_3'] = rnd1_e3
             row['tiempo_etapa_3'] = t3
 
