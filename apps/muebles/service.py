@@ -184,7 +184,7 @@ class MueblesService:
         }
 
         # ── Selección de línea ─────────────────────────────────────────────────
-        rnd_etapas = random.random()
+        rnd_etapas = random.uniform(0.0,0.99)
         row['rnd_cantidad_etapas'] = rnd_etapas
         if rnd_etapas < p1:
             n_etapas = 1
@@ -195,14 +195,14 @@ class MueblesService:
         row['cantidad_etapas'] = n_etapas
 
         # Etapa 1 (todas las líneas)
-        rnd1_e1 = random.random()
+        rnd1_e1 = random.uniform(0.0,0.99)
         rnd2_e1 = prev_rnd_e1 if prev_rnd_e1 is not None else 0
         t1 = max(0.0, self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e1, rnd2_e1))
         row['rnd_tiempo_etapa_1'] = rnd1_e1
         row['tiempo_etapa_1'] = t1
 
         # Demora solo en líneas 1 y 3
-        rnd_tiene_demora_e1 = random.random()
+        rnd_tiene_demora_e1 = random.uniform(0.0,0.99)
         tiene_demora_e1 = rnd_tiene_demora_e1 < prob_demora
         t1_total = t1*factor_demora if tiene_demora_e1 else t1
         row['rnd_demora_etapa_1'] = rnd_tiene_demora_e1
@@ -213,7 +213,7 @@ class MueblesService:
 
         # Etapa 2 (líneas 2 y 3)
         if n_etapas >= 2:
-            rnd1_e2 = random.random()
+            rnd1_e2 = random.uniform(0.0,0.99)
             rnd2_e2 = prev_rnd_e2 if prev_rnd_e2 is not None else 0
             t2 = max(0.0, self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e2, rnd2_e2))
             row['rnd_tiempo_etapa_2'] = rnd1_e2
@@ -222,13 +222,13 @@ class MueblesService:
 
         # Etapa 3 (línea 3)
         if n_etapas == 3:
-            rnd1_e3 = random.random()
+            rnd1_e3 = random.uniform(0.0,0.99)
             rnd2_e3 = prev_rnd_e3 if prev_rnd_e3 is not None else 0
             t3 = max(0.0, self._normal(media_tiempo_etapa, desvio_tiempo_etapa, rnd1_e3, rnd2_e3))
             row['rnd_tiempo_etapa_3'] = rnd1_e3
             row['tiempo_etapa_3'] = t3
 
-            rnd_tiene_demora_e3  = random.random()
+            rnd_tiene_demora_e3  = random.uniform(0.0,0.99)
             tiene_demora_e3 = rnd_tiene_demora_e3 < prob_demora
             t3_total = t3*factor_demora if tiene_demora_e3 else t3
             row['rnd_demora_etapa_3']  = rnd_tiene_demora_e3
@@ -237,25 +237,25 @@ class MueblesService:
             tiempo_etapas += t3_total
 
         # Control
-        rnd_control  = random.random()
+        rnd_control  = random.uniform(0.0,0.99)
         pasa_control = rnd_control < prob_control
         row['rnd_pasa_control'] = rnd_control
         row['pasa_control'] = pasa_control
         tiempo_control = None
         if pasa_control:
-            rnd_tiempo_control = random.random()
+            rnd_tiempo_control = random.uniform(0.0,0.99)
             tiempo_control = self._exponential(lambda_control, rnd_tiempo_control)
             row['rnd_tiempo_control'] = rnd_tiempo_control
             row['tiempo_control'] = tiempo_control
 
         # Intervención extra
-        rnd_requiere_intervencion  = random.random()
+        rnd_requiere_intervencion  = random.uniform(0.0,0.99)
         requiere_intervencion  = rnd_requiere_intervencion < prob_intervencion
         row['rnd_requiere_intervencion'] = rnd_requiere_intervencion
         row['requiere_intervencion'] = requiere_intervencion
         tiempo_intervencion = None
         if requiere_intervencion:
-            rnd_tiempo_intervencion  = random.random()
+            rnd_tiempo_intervencion  = random.uniform(0.0,0.99)
             tiempo_intervencion = self._exponential(lambda_intervencion, rnd_tiempo_intervencion)
             row['rnd_tiempo_intervencion'] = rnd_tiempo_intervencion
             row['tiempo_intervencion'] = tiempo_intervencion
