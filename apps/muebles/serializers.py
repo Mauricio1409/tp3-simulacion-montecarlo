@@ -3,8 +3,9 @@ from rest_framework import serializers
 
 class SimulationParamsSerializer(serializers.Serializer):
     n_corridas = serializers.IntegerField(default=1000, min_value=1, max_value=1_000_000)
-    page = serializers.IntegerField(default=1, min_value=1)
+    start_reloj = serializers.IntegerField(default=1, min_value=1)
     page_size = serializers.IntegerField(default=100, min_value=1, max_value=500)
+    return_all_rows = serializers.BooleanField(default=True, required=False)
 
     prob_etapa_1 = serializers.FloatField(default=0.20, min_value=0.0, max_value=1.0)
     prob_etapa_2 = serializers.FloatField(default=0.50, min_value=0.0, max_value=1.0)
@@ -25,13 +26,11 @@ class SimulationParamsSerializer(serializers.Serializer):
         if abs(data['prob_etapa_1'] + data['prob_etapa_2'] + data['prob_etapa_3'] - 1.0) > 1e-6:
             raise serializers.ValidationError("Las probabilidades de etapa deben sumar 1.")
 
-        # validacion de pagina y page_size en relacion a n_corridas
-        page = data['page']
-        page_size = data['page_size']
+        # validacion de start_reloj en relacion a n_corridas
+        start_reloj = data['start_reloj']
         n = data['n_corridas']
-        offset = (page - 1) * page_size
-        if offset >= n:
+        if start_reloj > n:
             raise serializers.ValidationError(
-                f"La página {page} con page_size {page_size} excede n_corridas={n}."
+                f"El reloj inicial {start_reloj} no puede ser mayor a n_corridas={n}."
             )
         return data

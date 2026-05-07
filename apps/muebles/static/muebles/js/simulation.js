@@ -8,15 +8,19 @@ const results = document.getElementById('results');
 const tbody = document.getElementById('sim-tbody');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
-const pageInfo = document.getElementById('page-info');
+const pageNumberInput = document.getElementById('page-number-input');
+const totalPagesSpan = document.getElementById('total-pages-span');
 const resultMeta = document.getElementById('result-meta');
-const inputPage = form.elements['page'];
+const jumpRelojInput = document.getElementById('jump-reloj');
+const btnJumpReloj = document.getElementById('btn-jump-reloj');
 
-const INT_FIELDS = new Set(['n_corridas', 'page', 'page_size']);
+const INT_FIELDS = new Set(['n_corridas', 'start_reloj', 'page_size']);
 
 let lastParams  = null;
 let currentPage = 1;
 let totalPages  = 1;
+let allResults  = null;
+let lastRowData = null;
 
 // Helpers
 
@@ -55,9 +59,6 @@ function validateParams(p) {
     if (!Number.isInteger(p.n_corridas) || p.n_corridas < 1 || p.n_corridas > 1_000_000) {
         errors.n_corridas = 'Debe ser un entero entre 1 y 1.000.000';
     }
-    if (!Number.isInteger(p.page) || p.page < 1) {
-        errors.page = 'Debe ser un entero ≥ 1';
-    }
     if (!Number.isInteger(p.page_size) || p.page_size < 1 || p.page_size > 500) {
         errors.page_size = 'Debe ser un entero entre 1 y 500';
     }
@@ -94,14 +95,6 @@ function validateParams(p) {
     // Factor demora: ≥ 1
     if (Number.isNaN(p.factor_demora) || p.factor_demora < 1) {
         errors.factor_demora = 'Debe ser ≥ 1';
-    }
-
-    // Cross-field: la página no puede exceder el total de corridas
-    if (Number.isInteger(p.n_corridas) && Number.isInteger(p.page) && Number.isInteger(p.page_size)) {
-        const offset = (p.page - 1) * p.page_size;
-        if (offset >= p.n_corridas) {
-            errors.page = `La página ${p.page} excede el total de ${p.n_corridas} corridas`;
-        }
     }
 
     return errors;
@@ -209,9 +202,11 @@ function buildRow(row, isLast = false) {
 //  Tabla
 
 function renderTable(data) {
-    tbody.innerHTML = '';
+    const pageSize = lastParams?.page_size || 200;
+    const pageRows = (data.rows ?? []).slice(0, pageSize);
 
-    for (const row of data.rows ?? []) {
+    tbody.innerHTML = '';
+    for (const row of pageRows) {
         tbody.appendChild(buildRow(row));
     }
 
@@ -223,10 +218,43 @@ function renderTable(data) {
         tbody.appendChild(buildRow(data.last_row, true));
     }
 
-    currentPage = data.page;
-    totalPages  = data.total_pages;
-    inputPage.value = currentPage;
-    pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+    currentPage = 1;
+    totalPages = Math.ceil(data.total_corridas / pageSize);
+    pageNumberInput.value = 1;
+    pageNumberInput.max = totalPages;
+    totalPagesSpan.textContent = totalPages;
+    btnPrev.disabled = true;
+    btnNext.disabled = totalPages <= 1;
+}
+
+function displayPage(startReloj, pageSize) {
+    if (!allResults) return;
+
+    const page = Math.ceil(startReloj / pageSize);
+    const totalPagesCalc = Math.ceil(lastParams.n_corridas / pageSize);
+
+    const pageRows = allResults.filter(row =>
+        row.reloj >= startReloj && row.reloj < startReloj + pageSize
+    );
+
+    tbody.innerHTML = '';
+    for (const row of pageRows) {
+        tbody.appendChild(buildRow(row));
+    }
+
+    if (lastRowData && lastRowData.last_row) {
+        const sep = document.createElement('tr');
+        sep.classList.add('row-separator');
+        sep.innerHTML = `<td colspan="32">··· FILA N — CORRIDA ${lastRowData.total_corridas?.toLocaleString()} ···</td>`;
+        tbody.appendChild(sep);
+        tbody.appendChild(buildRow(lastRowData.last_row, true));
+    }
+
+    currentPage = page;
+    totalPages = totalPagesCalc;
+    pageNumberInput.value = page;
+    pageNumberInput.max = totalPages;
+    totalPagesSpan.textContent = totalPages;
     btnPrev.disabled = currentPage <= 1;
     btnNext.disabled = currentPage >= totalPages;
 }
@@ -241,7 +269,7 @@ async function runSimulation(params) {
         const res = await fetch(`${API_BASE}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(params),
+            body: JSON.stringify({ ...params, return_all_rows: true }),
         });
 
         const data = await res.json();
@@ -250,6 +278,9 @@ async function runSimulation(params) {
             const msg = Object.values(data).flat().join(' · ') || `HTTP ${res.status}`;
             throw new Error(msg);
         }
+
+        allResults = data.rows || [];
+        lastRowData = data;
 
         renderStats(data);
         renderTable(data);
@@ -270,8 +301,7 @@ form.addEventListener('submit', async (e) => {
     clearAllErrors();
 
     const params = collectParams();
-    params.page = 1;
-    inputPage.value = 1;
+    params.start_reloj = 1;
 
     const errors = validateParams(params);
     if (Object.keys(errors).length > 0) {
@@ -294,14 +324,61 @@ btnDefaults.addEventListener('click', () => {
     clearAllErrors();
 });
 
+btnJumpReloj.addEventListener('click', () => {
+    if (!allResults || !lastParams) return;
+
+    const reloj = parseInt(jumpRelojInput.value, 10);
+    if (!Number.isInteger(reloj) || reloj < 1 || reloj > lastParams.n_corridas) {
+        jumpRelojInput.classList.add('invalid');
+        return;
+    }
+
+    jumpRelojInput.classList.remove('invalid');
+    displayPage(reloj, lastParams.page_size);
+    jumpRelojInput.value = '';
+});
+
+jumpRelojInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        btnJumpReloj.click();
+    }
+});
+
+jumpRelojInput.addEventListener('input', () => {
+    jumpRelojInput.classList.remove('invalid');
+});
+
+pageNumberInput.addEventListener('change', () => {
+    if (!allResults || !lastParams) return;
+
+    const page = parseInt(pageNumberInput.value, 10);
+    const totalPagesCalc = Math.ceil(lastParams.n_corridas / lastParams.page_size);
+
+    if (!Number.isInteger(page) || page < 1 || page > totalPagesCalc) {
+        pageNumberInput.classList.add('invalid');
+        pageNumberInput.value = currentPage;
+        return;
+    }
+
+    pageNumberInput.classList.remove('invalid');
+    const startReloj = (page - 1) * lastParams.page_size + 1;
+    displayPage(startReloj, lastParams.page_size);
+});
+
+pageNumberInput.addEventListener('focus', () => {
+    pageNumberInput.select();
+});
+
 btnPrev.addEventListener('click', async () => {
-    if (!lastParams || currentPage <= 1) return;
-    lastParams.page = currentPage - 1;
-    await runSimulation(lastParams);
+    if (!allResults || !lastParams || currentPage <= 1) return;
+    const pageSize = lastParams.page_size;
+    const newStart = Math.max(1, (currentPage - 2) * pageSize + 1);
+    displayPage(newStart, pageSize);
 });
 
 btnNext.addEventListener('click', async () => {
-    if (!lastParams || currentPage >= totalPages) return;
-    lastParams.page = currentPage + 1;
-    await runSimulation(lastParams);
+    if (!allResults || !lastParams || currentPage >= totalPages) return;
+    const pageSize = lastParams.page_size;
+    const newStart = currentPage * pageSize + 1;
+    displayPage(newStart, pageSize);
 });

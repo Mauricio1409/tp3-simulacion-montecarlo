@@ -36,11 +36,6 @@
                             <span class="field-error" data-for="n_corridas"></span>
                         </label>
                         <label>
-                            Página
-                            <input type="number" name="page" value="1" min="1">
-                            <span class="field-error" data-for="page"></span>
-                        </label>
-                        <label>
                             Filas por página
                             <input type="number" name="page_size" value="200" min="1" max="500">
                             <span class="hint">Máx. 500</span>
@@ -193,6 +188,14 @@
             </div>
         </div>
 
+        <div class="jump-to-reloj">
+            <label>
+                Saltar a reloj:
+                <input type="number" id="jump-reloj" min="1" placeholder="Ingresá número">
+                <button type="button" id="btn-jump-reloj">Ir</button>
+            </label>
+        </div>
+
         <div class="table-wrapper">
             <table id="sim-table">
                 <thead>
@@ -230,7 +233,9 @@
 
         <div class="pagination">
             <button class="btn-page" id="btn-prev" disabled>← Anterior</button>
-            <span id="page-info" class="page-info"></span>
+            <div class="page-info-editable">
+                Página <input type="number" id="page-number-input" min="1" value="1"> de <span id="total-pages-span">1</span>
+            </div>
             <button class="btn-page" id="btn-next">Siguiente →</button>
         </div>
 

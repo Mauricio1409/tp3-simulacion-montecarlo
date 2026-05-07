@@ -11,8 +11,9 @@ class MueblesService:
         params = serializer.validated_data
 
         n = params['n_corridas']
-        page = params['page']
+        start_reloj = params['start_reloj']
         page_size = params['page_size']
+        return_all_rows = params.get('return_all_rows', True)
 
         p1  = params['prob_etapa_1']
         p12 = p1 + params['prob_etapa_2']
@@ -31,9 +32,16 @@ class MueblesService:
         desvio_tiempo_etapa = params['desvio_tiempo_etapa']
 
         # rango de corridas que vamos a guardar en memoria
-        # excluimos la última corrida porque siempre va aparte en last_row
-        primera_fila_pagina = (page - 1) * page_size + 1
-        ultima_fila_pagina = min(page * page_size, n - 1)
+        # si return_all_rows es true, devolvemos todas las filas
+        # si es false, devolvemos solo la página solicitada
+        if return_all_rows:
+            primera_fila_pagina = 1
+            ultima_fila_pagina = n - 1
+        else:
+            primera_fila_pagina = start_reloj
+            ultima_fila_pagina = min(start_reloj + page_size - 1, n - 1)
+
+        current_page = math.ceil(start_reloj / page_size)
         total_pages = math.ceil(n / page_size)
 
         # acumuladores escalares (no guardamos N filas en memoria)
@@ -143,7 +151,7 @@ class MueblesService:
 
         response = {
             "total_corridas": n,
-            "page" : page,
+            "page" : current_page,
             "page_size" : page_size,
             "total_pages": total_pages,
             "rows" : rows,

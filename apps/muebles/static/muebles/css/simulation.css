@@ -344,3 +344,93 @@ td.no { color: var(--red-700);   font-weight: 600; }
 .btn-page:hover:not(:disabled) { background: var(--gray-200); }
 .btn-page:disabled { opacity: .4; cursor: not-allowed; }
 .page-info { font-size: .82rem; color: var(--gray-600); font-weight: 500; }
+
+/* ─── Page Info Editable ──────────────────────────────────────────────────── */
+.page-info-editable {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .82rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+#page-number-input {
+    width: 45px;
+    padding: 4px 6px;
+    border: 1px solid var(--gray-300);
+    border-radius: 3px;
+    font-size: .82rem;
+    text-align: center;
+    font-weight: 500;
+}
+#page-number-input:focus {
+    outline: none;
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, .1);
+    background: var(--blue-50);
+}
+#page-number-input.invalid {
+    border-color: var(--red-700);
+    background: rgba(185, 28, 28, .05);
+}
+#total-pages-span {
+    font-weight: 500;
+}
+
+/* ─── Jump to Reloj ───────────────────────────────────────────────────────── */
+.jump-to-reloj {
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+}
+.jump-to-reloj label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-weight: 500;
+    color: var(--gray-600);
+    flex-wrap: wrap;
+}
+.jump-to-reloj input {
+    width: 140px;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.jump-to-reloj input.invalid {
+    border-color: var(--red-700);
+    background: rgba(185, 28, 28, .05);
+}
+.jump-to-reloj input:focus {
+    outline: none;
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, .1);
+}
+#btn-jump-reloj {
+    padding: 8px 20px;
+    background: var(--blue-600);
+    color: white;
+    border: none !important;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.5;
+    min-width: 50px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#btn-jump-reloj:hover {
+    background: var(--blue-700);
+}
+#btn-jump-reloj:active {
+    transform: scale(0.98);
+}
+
