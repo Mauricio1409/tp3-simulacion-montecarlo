@@ -1,10 +1,14 @@
+import math
 from rest_framework import serializers
 
 
+WINDOW_SIZE = 200
+
 class SimulationParamsSerializer(serializers.Serializer):
     n_corridas = serializers.IntegerField(default=1000, min_value=1, max_value=1_000_000)
+    desde = serializers.IntegerField(default=1, min_value=1)
     page = serializers.IntegerField(default=1, min_value=1)
-    page_size = serializers.IntegerField(default=100, min_value=1, max_value=500)
+    seed = serializers.IntegerField(required=True)
 
     prob_etapa_1 = serializers.FloatField(default=0.20, min_value=0.0, max_value=1.0)
     prob_etapa_2 = serializers.FloatField(default=0.50, min_value=0.0, max_value=1.0)
@@ -21,17 +25,20 @@ class SimulationParamsSerializer(serializers.Serializer):
     factor_demora = serializers.FloatField(default=1.8, min_value=1.0)
 
     def validate(self, data):
-        # validacion de probabilidades etapas — deben sumar 1
         if abs(data['prob_etapa_1'] + data['prob_etapa_2'] + data['prob_etapa_3'] - 1.0) > 1e-6:
             raise serializers.ValidationError("Las probabilidades de etapa deben sumar 1.")
 
-        # validacion de pagina y page_size en relacion a n_corridas
-        page = data['page']
-        page_size = data['page_size']
+        desde = data['desde']
         n = data['n_corridas']
-        offset = (page - 1) * page_size
-        if offset >= n:
+        if desde > n:
             raise serializers.ValidationError(
-                f"La página {page} con page_size {page_size} excede n_corridas={n}."
+                f"'desde' ({desde}) no puede ser mayor que n_corridas ({n})."
             )
+
+        total_pages = math.ceil((n - desde + 1) / WINDOW_SIZE)
+        if data['page'] > total_pages:
+            raise serializers.ValidationError(
+                f"'page' ({data['page']}) excede el total de páginas ({total_pages})."
+            )
+
         return data

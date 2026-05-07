@@ -36,15 +36,10 @@
                             <span class="field-error" data-for="n_corridas"></span>
                         </label>
                         <label>
-                            Página
-                            <input type="number" name="page" value="1" min="1">
-                            <span class="field-error" data-for="page"></span>
-                        </label>
-                        <label>
-                            Filas por página
-                            <input type="number" name="page_size" value="200" min="1" max="500">
-                            <span class="hint">Máx. 500</span>
-                            <span class="field-error" data-for="page_size"></span>
+                            Mostrar desde corrida N°
+                            <input type="number" name="desde" value="1" min="1">
+                            <span class="hint">Muestra 200 filas desde ahí + la última</span>
+                            <span class="field-error" data-for="desde"></span>
                         </label>
                     </div>
                 </fieldset>
@@ -193,6 +188,14 @@
             </div>
         </div>
 
+        <div class="pagination-controls hidden" id="pagination">
+            <button type="button" class="btn-secondary" id="btn-prev">← Anterior</button>
+            <span class="page-info-wrap">
+                Página <input type="number" id="page-input" min="1" value="1"> de <span id="total-pages">1</span>
+            </span>
+            <button type="button" class="btn-secondary" id="btn-next">Siguiente →</button>
+        </div>
+
         <div class="table-wrapper">
             <table id="sim-table">
                 <thead>
@@ -228,11 +231,6 @@
             </table>
         </div>
 
-        <div class="pagination">
-            <button class="btn-page" id="btn-prev" disabled>← Anterior</button>
-            <span id="page-info" class="page-info"></span>
-            <button class="btn-page" id="btn-next">Siguiente →</button>
-        </div>
 
     </section>
 

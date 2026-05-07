@@ -1,18 +1,21 @@
 import math
 import random
-from apps.muebles.serializers import SimulationParamsSerializer
+from apps.muebles.serializers import SimulationParamsSerializer, WINDOW_SIZE
 
 class MueblesService:
 
-    def run(self, data: dict) -> dict[str, any]:
+    def run(self, data: dict) -> dict:
         serializer = SimulationParamsSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         params = serializer.validated_data
 
         n = params['n_corridas']
+        desde = params['desde']
         page = params['page']
-        page_size = params['page_size']
+        seed = params['seed']
+
+        random.seed(seed)
 
         p1  = params['prob_etapa_1']
         p12 = p1 + params['prob_etapa_2']
@@ -30,11 +33,9 @@ class MueblesService:
         media_tiempo_etapa = params['media_tiempo_etapa']
         desvio_tiempo_etapa = params['desvio_tiempo_etapa']
 
-        # rango de corridas que vamos a guardar en memoria
-        # excluimos la última corrida porque siempre va aparte en last_row
-        primera_fila_pagina = (page - 1) * page_size + 1
-        ultima_fila_pagina = min(page * page_size, n - 1)
-        total_pages = math.ceil(n / page_size)
+        total_pages = math.ceil((n - desde + 1) / WINDOW_SIZE)
+        primera_fila_ventana = desde + (page - 1) * WINDOW_SIZE
+        ultima_fila_ventana = min(primera_fila_ventana + WINDOW_SIZE - 1, n)
 
         # acumuladores escalares (no guardamos N filas en memoria)
         tiempo_total_acumulado = 0.0
@@ -126,8 +127,8 @@ class MueblesService:
             row["acc_count_demoras_calibracion"] = cantidad_demoras_calibracion
             row["acc_count_demoras_extras"] = cantidad_demoras_extras
 
-            # guardamos solo si la corrida cae dentro de la página solicitada
-            if primera_fila_pagina <= i <= ultima_fila_pagina:
+            # guardamos solo si la corrida cae dentro de la ventana solicitada
+            if primera_fila_ventana <= i <= ultima_fila_ventana:
                 rows.append(row)
 
             # la última corrida siempre se guarda aparte
@@ -143,8 +144,8 @@ class MueblesService:
 
         response = {
             "total_corridas": n,
-            "page" : page,
-            "page_size" : page_size,
+            "desde": desde,
+            "page": page,
             "total_pages": total_pages,
             "rows" : rows,
             "last_row" : last_row,

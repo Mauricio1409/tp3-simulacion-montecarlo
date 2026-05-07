@@ -1,22 +1,25 @@
 const API_BASE = '/api/simulation';
 
-const form= document.getElementById('sim-form');
+const form       = document.getElementById('sim-form');
 const btnSimular = document.getElementById('btn-simular');
-const btnDefaults= document.getElementById('btn-defaults');
-const simStatus = document.getElementById('sim-status');
-const results = document.getElementById('results');
-const tbody = document.getElementById('sim-tbody');
-const btnPrev = document.getElementById('btn-prev');
-const btnNext = document.getElementById('btn-next');
-const pageInfo = document.getElementById('page-info');
+const btnDefaults = document.getElementById('btn-defaults');
+const simStatus  = document.getElementById('sim-status');
+const results    = document.getElementById('results');
+const tbody      = document.getElementById('sim-tbody');
 const resultMeta = document.getElementById('result-meta');
-const inputPage = form.elements['page'];
+const pagination  = document.getElementById('pagination');
+const btnPrev     = document.getElementById('btn-prev');
+const btnNext     = document.getElementById('btn-next');
+const pageInput   = document.getElementById('page-input');
+const totalPagesEl = document.getElementById('total-pages');
 
-const INT_FIELDS = new Set(['n_corridas', 'page', 'page_size']);
+const INT_FIELDS = new Set(['n_corridas', 'desde', 'page', 'seed']);
 
-let lastParams  = null;
-let currentPage = 1;
-let totalPages  = 1;
+// Estado de paginación
+let currentSeed   = null;
+let currentPage   = 1;
+let totalPages    = 1;
+let currentParams = null;
 
 // Helpers
 
@@ -51,15 +54,18 @@ function clearAllErrors() {
 function validateParams(p) {
     const errors = {};
 
-    // Enteros con rango
     if (!Number.isInteger(p.n_corridas) || p.n_corridas < 1 || p.n_corridas > 1_000_000) {
         errors.n_corridas = 'Debe ser un entero entre 1 y 1.000.000';
     }
-    if (!Number.isInteger(p.page) || p.page < 1) {
-        errors.page = 'Debe ser un entero ≥ 1';
+    if (!Number.isInteger(p.desde) || p.desde < 1) {
+        errors.desde = 'Debe ser un entero ≥ 1';
     }
-    if (!Number.isInteger(p.page_size) || p.page_size < 1 || p.page_size > 500) {
-        errors.page_size = 'Debe ser un entero entre 1 y 500';
+
+    // Cross-field: desde no puede superar n_corridas
+    if (Number.isInteger(p.n_corridas) && Number.isInteger(p.desde)) {
+        if (p.desde > p.n_corridas) {
+            errors.desde = `No puede ser mayor que n_corridas (${p.n_corridas})`;
+        }
     }
 
     // Probabilidades de etapa: cada una en [0, 1]
@@ -91,17 +97,9 @@ function validateParams(p) {
         }
     }
 
-    // Factor demora: ≥ 1
+    // Factor demora: >= 1
     if (Number.isNaN(p.factor_demora) || p.factor_demora < 1) {
-        errors.factor_demora = 'Debe ser ≥ 1';
-    }
-
-    // Cross-field: la página no puede exceder el total de corridas
-    if (Number.isInteger(p.n_corridas) && Number.isInteger(p.page) && Number.isInteger(p.page_size)) {
-        const offset = (p.page - 1) * p.page_size;
-        if (offset >= p.n_corridas) {
-            errors.page = `La página ${p.page} excede el total de ${p.n_corridas} corridas`;
-        }
+        errors.factor_demora = 'Debe ser >= 1';
     }
 
     return errors;
@@ -185,7 +183,7 @@ function buildRow(row, isLast = false) {
     addNum(tr, row.rnd_tiempo_control);
     addNum(tr, row.tiempo_control);
 
-    // Intervención
+    // Intervencion
     addNum(tr, row.rnd_requiere_intervencion);
     addBool(tr, row.requiere_intervencion);
     addNum(tr, row.rnd_tiempo_intervencion);
@@ -206,7 +204,7 @@ function buildRow(row, isLast = false) {
     return tr;
 }
 
-//  Tabla
+// Tabla
 
 function renderTable(data) {
     tbody.innerHTML = '';
@@ -222,22 +220,29 @@ function renderTable(data) {
         tbody.appendChild(sep);
         tbody.appendChild(buildRow(data.last_row, true));
     }
-
-    currentPage = data.page;
-    totalPages  = data.total_pages;
-    inputPage.value = currentPage;
-    pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-    btnPrev.disabled = currentPage <= 1;
-    btnNext.disabled = currentPage >= totalPages;
 }
 
-// Fetch simulación
+// Paginacion
 
-async function runSimulation(params) {
+function updatePaginationControls(data) {
+    totalPages = data.total_pages;
+    pageInput.value = data.page;
+    pageInput.max = totalPages;
+    totalPagesEl.textContent = totalPages;
+    btnPrev.classList.toggle('hidden', data.page <= 1);
+    btnNext.classList.toggle('hidden', data.page >= totalPages);
+    pagination.classList.toggle('hidden', totalPages <= 1);
+}
+
+// Fetch simulacion
+
+async function fetchPage(page) {
     btnSimular.disabled = true;
-    setStatus('Simulando…');
+    setStatus('Cargando…');
 
     try {
+        const params = { ...currentParams, seed: currentSeed, page };
+
         const res = await fetch(`${API_BASE}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -251,10 +256,12 @@ async function runSimulation(params) {
             throw new Error(msg);
         }
 
+        currentPage = page;
         renderStats(data);
         renderTable(data);
+        updatePaginationControls(data);
         results.classList.remove('hidden');
-        setStatus(`Simulación completada — ${params.n_corridas?.toLocaleString()} corridas.`);
+        setStatus(`${params.n_corridas?.toLocaleString()} corridas — mostrando página ${page} de ${data.total_pages}`);
 
     } catch (err) {
         setStatus(`Error: ${err.message}`, true);
@@ -270,8 +277,6 @@ form.addEventListener('submit', async (e) => {
     clearAllErrors();
 
     const params = collectParams();
-    params.page = 1;
-    inputPage.value = 1;
 
     const errors = validateParams(params);
     if (Object.keys(errors).length > 0) {
@@ -280,8 +285,25 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    lastParams = params;
-    await runSimulation(lastParams);
+    currentSeed = Date.now();
+    localStorage.setItem('sim_seed', String(currentSeed));
+    currentParams = params;
+
+    await fetchPage(1);
+});
+
+btnPrev.addEventListener('click', () => fetchPage(currentPage - 1));
+
+btnNext.addEventListener('click', () => fetchPage(currentPage + 1));
+
+pageInput.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const p = parseInt(pageInput.value, 10);
+    if (Number.isInteger(p) && p >= 1 && p <= totalPages) {
+        fetchPage(p);
+    } else {
+        pageInput.value = currentPage;
+    }
 });
 
 // Limpiar el error de un campo cuando el usuario lo modifica
@@ -292,16 +314,4 @@ form.addEventListener('input', (e) => {
 btnDefaults.addEventListener('click', () => {
     form.reset();
     clearAllErrors();
-});
-
-btnPrev.addEventListener('click', async () => {
-    if (!lastParams || currentPage <= 1) return;
-    lastParams.page = currentPage - 1;
-    await runSimulation(lastParams);
-});
-
-btnNext.addEventListener('click', async () => {
-    if (!lastParams || currentPage >= totalPages) return;
-    lastParams.page = currentPage + 1;
-    await runSimulation(lastParams);
 });
