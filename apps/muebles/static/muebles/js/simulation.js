@@ -54,8 +54,8 @@ function clearAllErrors() {
 function validateParams(p) {
     const errors = {};
 
-    if (!Number.isInteger(p.n_corridas) || p.n_corridas < 1 || p.n_corridas > 1_000_000) {
-        errors.n_corridas = 'Debe ser un entero entre 1 y 1.000.000';
+    if (!Number.isInteger(p.n_corridas) || p.n_corridas < 1 || p.n_corridas > 10_000_000) {
+        errors.n_corridas = 'Debe ser un entero entre 1 y 10.000.000';
     }
     if (!Number.isInteger(p.desde) || p.desde < 1) {
         errors.desde = 'Debe ser un entero ≥ 1';

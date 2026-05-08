@@ -5,7 +5,7 @@ from rest_framework import serializers
 WINDOW_SIZE = 200
 
 class SimulationParamsSerializer(serializers.Serializer):
-    n_corridas = serializers.IntegerField(default=1000, min_value=1, max_value=1_000_000)
+    n_corridas = serializers.IntegerField(default=100000, min_value=1, max_value=10_000_000)
     desde = serializers.IntegerField(default=1, min_value=1)
     page = serializers.IntegerField(default=1, min_value=1)
     seed = serializers.IntegerField(required=True)
