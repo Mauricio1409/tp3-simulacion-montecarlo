@@ -1,5 +1,7 @@
 const API_BASE = '/api/simulation';
 
+const WINDOW_SIZE = 200;
+
 const form       = document.getElementById('sim-form');
 const btnSimular = document.getElementById('btn-simular');
 const btnDefaults = document.getElementById('btn-defaults');
@@ -12,14 +14,17 @@ const btnPrev     = document.getElementById('btn-prev');
 const btnNext     = document.getElementById('btn-next');
 const pageInput   = document.getElementById('page-input');
 const totalPagesEl = document.getElementById('total-pages');
+const gotoInput   = document.getElementById('goto-input');
+const btnGoto     = document.getElementById('btn-goto');
+const gotoError   = document.getElementById('goto-error');
 
 const INT_FIELDS = new Set(['n_corridas', 'desde', 'page', 'seed']);
 
 // Estado de paginación
-let currentSeed   = null;
-let currentPage   = 1;
-let totalPages    = 1;
-let currentParams = null;
+let currentSeed        = null;
+let currentPage        = 1;
+let totalPages         = 1;
+let currentParams      = null;
 
 // Helpers
 
@@ -315,3 +320,68 @@ btnDefaults.addEventListener('click', () => {
     form.reset();
     clearAllErrors();
 });
+
+// Ir a corrida específica
+async function goToRecord() {
+    gotoError.textContent = '';
+
+    if (currentSeed === null) {
+        gotoError.textContent = 'Primero ejecutá una simulación.';
+        return;
+    }
+
+    const R = parseInt(gotoInput.value, 10);
+
+    if (!Number.isInteger(R)) {
+        gotoError.textContent = 'Ingresá un número válido.';
+        return;
+    }
+    if (R < currentParams.desde) {
+        gotoError.textContent = `Mínimo: ${currentParams.desde}`;
+        return;
+    }
+    if (R > currentParams.n_corridas) {
+        gotoError.textContent = `Máximo: ${currentParams.n_corridas}`;
+        return;
+    }
+
+    const targetPage = Math.ceil((R - currentParams.desde + 1) / WINDOW_SIZE);
+
+    btnSimular.disabled = true;
+    setStatus('Cargando…');
+
+    try {
+        const params = { ...currentParams, desde: R, page: 1, seed: currentSeed };
+
+        const res = await fetch(`${API_BASE}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            const msg = Object.values(data).flat().join(' · ') || `HTTP ${res.status}`;
+            throw new Error(msg);
+        }
+
+        renderStats(data);
+        renderTable(data);
+        results.classList.remove('hidden');
+        currentPage = targetPage;
+        pageInput.value = targetPage;
+        btnPrev.classList.toggle('hidden', targetPage <= 1);
+        btnNext.classList.toggle('hidden', targetPage >= totalPages);
+        gotoInput.value = '';
+        setStatus(`Vista rápida: corrida ${R} → ${R + WINDOW_SIZE - 1}`);
+
+    } catch (err) {
+        gotoError.textContent = err.message;
+    } finally {
+        btnSimular.disabled = false;
+    }
+}
+
+btnGoto.addEventListener('click', goToRecord);
+gotoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') goToRecord(); });

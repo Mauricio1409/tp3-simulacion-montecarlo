@@ -189,11 +189,19 @@
         </div>
 
         <div class="pagination-controls hidden" id="pagination">
-            <button type="button" class="btn-secondary" id="btn-prev">← Anterior</button>
-            <span class="page-info-wrap">
-                Página <input type="number" id="page-input" min="1" value="1"> de <span id="total-pages">1</span>
-            </span>
-            <button type="button" class="btn-secondary" id="btn-next">Siguiente →</button>
+            <div class="pagination-nav">
+                <button type="button" class="btn-page-nav" id="btn-prev">← Anterior</button>
+                <span class="page-info-wrap">
+                    Página <input type="number" id="page-input" min="1" value="1"> de <span id="total-pages">1</span>
+                </span>
+                <button type="button" class="btn-page-nav" id="btn-next">Siguiente →</button>
+            </div>
+            <div class="pagination-goto">
+                <label class="goto-label" for="goto-input">Ir a corrida</label>
+                <input type="number" id="goto-input" min="1" placeholder="N°">
+                <button type="button" class="btn-goto" id="btn-goto">Ir</button>
+                <span class="goto-error" id="goto-error"></span>
+            </div>
         </div>
 
         <div class="table-wrapper">
